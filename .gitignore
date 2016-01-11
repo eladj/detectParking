@@ -1,3 +1,6 @@
+# OpenCV DLLs
+*.dll
+
 # Windows image file caches
 Thumbs.db
 ehthumbs.db
