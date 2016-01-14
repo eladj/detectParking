@@ -41,7 +41,7 @@ Building
 
 **Linux:** I compiled it on Raspbian (Debian) with GCC 4.9 using the following command:
 
-`TO ADD`
+```g++ -Wall -g -std=c++11 `pkg-config --cflags --libs opencv` ./*.cpp -o ./detect-parking```
 
 **Windows:** Add the files to a Visual Studio solution. Add the OpenCV header and libraries files and build.
 
