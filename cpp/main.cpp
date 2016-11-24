@@ -5,9 +5,7 @@
 #include <opencv2/opencv.hpp>
 #include "Parking.h"
 #include "utils.h"
-
-#define DETECT_PARKING true
-#define SAVE_VIDEO false
+#include "ConfigLoad.h"
 
 using namespace std;
 
@@ -20,6 +18,11 @@ int main(int argc, char** argv)
 		printf("<ParkingData_Filename> should be simple txt file with lines of: id x1 y1 x2 y2 x3 y3 x4 y4\n");
 		return -1;
 	}
+    
+    //Load configs
+    ConfigLoad::parse();
+    
+    
 	const string videoFilename = argv[1];	
 	vector<Parking>  parking_data = parse_parking_file(argv[2]);
 	const int delay = 1;	
@@ -47,7 +50,7 @@ int main(int argc, char** argv)
 		(int)cap.get(cv::CAP_PROP_FRAME_HEIGHT));
 
 	cv::VideoWriter outputVideo;
-	if (SAVE_VIDEO)
+    if (ConfigLoad::options["SAVE_VIDEO"] == "true")
 	{		
 		string::size_type pAt = videoFilename.find_last_of('.');                  // Find extension point
 		const string videoOutFilename = videoFilename.substr(0, pAt) + "_out.avi";   // Form the new name with container
@@ -80,7 +83,10 @@ int main(int argc, char** argv)
 		cv::cvtColor(frame, frame_gray, cv::COLOR_BGR2GRAY);
 		cv::GaussianBlur(frame_gray, frame_blur, blur_kernel, 3, 3);
 		
-		if (DETECT_PARKING)
+        cout << ConfigLoad::options["DETECT_PARKING"];
+        printf("\n");
+        
+		if (ConfigLoad::options["DETECT_PARKING"] == "true")
 		{
 			for (Parking& park : parking_data)
 			{
@@ -88,7 +94,7 @@ int main(int argc, char** argv)
 				roi = frame_blur(park.getBoundingRect());
 				cv::Laplacian(roi, laplacian, CV_64F);								
 				delta = cv::mean(cv::abs(laplacian), park.getMask());
-				park.setStatus( delta[0] < PARK_LAPLACIAN_TH );				
+                park.setStatus( delta[0] < atof(ConfigLoad::options["PARK_LAPLACIAN_TH"].c_str()) );
 				printf("| %d: d=%-5.1f", park.getId(), delta[0]);
 			}
 			printf("\n");
@@ -115,7 +121,7 @@ int main(int argc, char** argv)
 		cv::putText(frame_out, oss.str(), cv::Point(5, 30), cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(0, 255, 255), 2, cv::LINE_AA);
 
 		// Save Video
-		if (SAVE_VIDEO)
+		if (ConfigLoad::options["SAVE_VIDEO"] == "true")
 		{
 			outputVideo.write(frame_out);
 		}
